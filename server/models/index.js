@@ -1,12 +1,9 @@
 const dbConfig = require("../config/dbConfig.js");
-
-const { Sequelize, DataTypes } = require("sequelize");
-
+const Sequelize = require("sequelize");
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   dialect: dbConfig.dialect,
   operatorsAliases: false,
-
   pool: {
     max: dbConfig.pool.max,
     min: dbConfig.pool.min,
@@ -15,6 +12,28 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   },
 });
 
+const db = {};
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
+db.users = require("./user.model")(sequelize, Sequelize);
+db.products = require("./product.model")(sequelize, Sequelize);
+
+db.users.hasOne(db.products, {
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+db.products.belongsTo(db.users);
+
+module.exports = db;
+
+db.sequelize
+  .sync({ force: true })
+  .then(() => {
+    console.log("Connected to database");
+  })
+  .catch((err) => console.log("Failed to connect to database"));
+
+//################################################################################################################
 sequelize
   .authenticate()
   .then(() => {
@@ -23,21 +42,3 @@ sequelize
   .catch((err) => {
     console.log("Error" + err);
   });
-
-const db = {};
-
-db.Sequelize = Sequelize;
-db.sequelize = sequelize;
-
-db.products = require("./productModel")(sequelize, DataTypes);
-db.users = require("./userModel")(sequelize, DataTypes);
-db.posts = require("./postModel")(sequelize, DataTypes);
-
-db.sequelize
-  .sync()
-  .then(() => {
-    console.log("Connected to database");
-  })
-  .catch((err) => console.log("Failed to connect to database"));
-
-module.exports = db;

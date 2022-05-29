@@ -1,35 +1,33 @@
 const express = require("express");
 const cors = require("cors");
-// const mysql = require("mysql");
-require("dotenv").config({ path: "./config/.env" });
-
 const app = express();
-
-const productRoutes = require("./routes/productRouter");
-const userRoutes = require("./routes/userRouter");
-
+const db = require("./models");
 let corOptions = {
   origin: "https://localhost:8081",
 };
+require("dotenv").config({ path: "./config/.env" });
+db.sequelize.sync();
+
+const productRoutes = require("./routes/product.routes");
+const userRoutes = require("./routes/user.routes");
+const { sequelize, Sequelize } = require("./models");
 
 //Middlewares
 app.use(cors(corOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//routers
-app.use("/api/products", productRoutes);
-app.use("/api/user", userRoutes);
-
 //Testing API
 app.get("/", (req, res) => {
-  res.json({ message: "wesh api" });
+  res.json({ message: "Welcome to My-React-App" });
 });
 
-//Port
-//const PORT = process.env.PORT || 8080;
-
+require("./routes/product.routes");
 //Server
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });
+
+//routers
+app.use("/api/products", productRoutes);
+app.use("/api/user", userRoutes);
